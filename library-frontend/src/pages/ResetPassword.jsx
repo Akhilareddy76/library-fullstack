@@ -48,7 +48,7 @@ export default function ResetPassword() {
 
     try {
       const res = await axios.post(
-        "https://library-backend-lpkg.onrender.com/api/password/reset",
+        "https://library-backend-woev.onrender.com/api/password/reset",
         {
           email,
           otp,

@@ -15,7 +15,7 @@ export default function Navbar() {
     const checkSession = async () => {
       try {
         const res = await axios.get(
-          "https://library-backend-lpkg.onrender.com/api/session-check",
+          "https://librarybackend-woev.onrender.com/api/session-check",
           { withCredentials: true }
         );
 
@@ -37,7 +37,7 @@ export default function Navbar() {
   const handleLogout = async () => {
     try {
       await axios.post(
-        "https://library-backend-lpkg.onrender.com/api/logout",
+        "https://library-backend-woev.onrender.com/api/logout",
         {},
         { withCredentials: true }
       );
