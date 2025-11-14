@@ -18,7 +18,7 @@ export default function Login() {
       return;
     }
     try {
-      const res = await axios.post("/login", { email, password });
+      const res = await axios.post("/api/login", { email, password });
       if (!res.data) {
         alert("Invalid email or password!");
         return;
