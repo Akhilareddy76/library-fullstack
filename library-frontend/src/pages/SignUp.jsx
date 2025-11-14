@@ -31,10 +31,13 @@ export default function Signup() {
     }
 
     try {
-      const res = await axios.post(
-        `${API_BASE}/signup`,
-        { name, email, password },
-        { withCredentials: true }
+      await axios.post(
+  `${API_BASE}/signup`,
+  { name, email, password },
+  {
+    withCredentials: true,
+    headers: { "Content-Type": "application/json" }
+  }
       );
 
       setUser(res.data);
