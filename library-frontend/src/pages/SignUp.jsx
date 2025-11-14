@@ -3,7 +3,7 @@ import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { BookContext } from "../contexts/BookContext";
 
-const API_BASE = "https://library-backend-lpkg.onrender.com/api";
+const API_BASE = "https://librarybackend-lpkg.onrender.com/api";
 
 export default function Signup() {
   const { setUser } = useContext(BookContext);

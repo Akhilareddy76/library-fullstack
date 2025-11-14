@@ -19,7 +19,7 @@ export default function ForgotPassword() {
 
     try {
       const res = await axios.post(
-     `https://library-backend-lpkg.onrender.com/api/password/forgot?email=${email}`,
+     `https://librarybackend-lpkg.onrender.com/api/password/forgot?email=${email}`,
      {},
       { withCredentials: true }
 );

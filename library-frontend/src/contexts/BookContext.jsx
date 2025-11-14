@@ -7,7 +7,7 @@ export const BookProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [wishlist, setWishlist] = useState([]);
 
-  const API = "https://library-backend-lpkg.onrender.com/api";
+  const API = "https://librarybackend-lpkg.onrender.com/api";
 
   useEffect(() => {
     const u = JSON.parse(localStorage.getItem("user"));

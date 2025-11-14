@@ -24,8 +24,7 @@ export default function VerifyOtp() {
       return;
     }
 
-    // ⭐ No backend call here
-    // We move to reset-password page and backend will verify OTP there
+
     navigate("/reset-password", { state: { email, otp } });
   };
 
