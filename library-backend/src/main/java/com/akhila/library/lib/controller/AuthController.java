@@ -20,26 +20,25 @@ public class AuthController {
         try {
             User savedUser = userService.registerUser(user);
             session.setAttribute("USER", savedUser.getId());
+            session.setMaxInactiveInterval(30 * 60);
             return savedUser;
-
-        } catch (Exception ex) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Email already exists");
+        } catch (RuntimeException ex) {
+            if ("EMAIL_EXISTS".equals(ex.getMessage())) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Email already exists");
+            }
+            throw ex;
         }
     }
 
-
     @PostMapping("/login")
     public User login(@RequestBody User user, HttpSession session) {
-
         User validUser = userService.loginUser(user.getEmail(), user.getPassword());
-
         if (validUser != null) {
             session.setAttribute("USER", validUser.getId());
             session.setMaxInactiveInterval(30 * 60);
             return validUser;
         }
-
-        return null;
+        throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid credentials");
     }
 
     @PostMapping("/logout")
@@ -47,15 +46,11 @@ public class AuthController {
         session.invalidate();
         return "Logged out";
     }
+
     @GetMapping("/session-check")
     public User sessionCheck(HttpSession session) {
-
         Long userId = (Long) session.getAttribute("USER");
-
-        if (userId == null) {
-            return null;
-        }
-
+        if (userId == null) return null;
         return userService.getUserById(userId);
     }
 }

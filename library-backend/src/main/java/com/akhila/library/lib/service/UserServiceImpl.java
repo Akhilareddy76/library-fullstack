@@ -6,6 +6,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.Optional;
+
 @Service
 public class UserServiceImpl implements UserService {
 
@@ -17,26 +19,22 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public User registerUser(User user) {
-
-        // check duplicate
-        if (userRepo.findByEmail(user.getEmail()) != null) {
-            throw new RuntimeException("Email already exists");
+        if (userRepo.existsByEmail(user.getEmail())) {
+            throw new RuntimeException("EMAIL_EXISTS");
         }
-
         String hashed = passwordEncoder.encode(user.getPassword());
         user.setPassword(hashed);
-
         return userRepo.save(user);
     }
 
-
     @Override
     public User loginUser(String email, String password) {
-
-        User user = userRepo.findByEmail(email);
-
-        if (user != null && passwordEncoder.matches(password, user.getPassword())) {
-            return user;
+        Optional<User> optional = userRepo.findFirstByEmail(email);
+        if (optional.isPresent()) {
+            User user = optional.get();
+            if (passwordEncoder.matches(password, user.getPassword())) {
+                return user;
+            }
         }
         return null;
     }

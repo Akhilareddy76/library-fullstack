@@ -16,51 +16,47 @@ public class OtpService {
     private final JavaMailSender mailSender;
     private final SecureRandom random = new SecureRandom();
 
-
+    // In-memory store (stateless deployments will lose this; for production use DB/Redis)
     private final Map<String, OtpEntry> store = new ConcurrentHashMap<>();
 
     public OtpService(JavaMailSender mailSender) {
         this.mailSender = mailSender;
     }
 
-
     public void sendOtp(String email) {
+
         String code = String.format("%06d", random.nextInt(1_000_000));
+        Instant expiryTime = Instant.now().plusSeconds(5 * 60);
 
-        Instant expiryTime = Instant.now().plusSeconds(5 * 60); // 5 minutes
+        try {
+            SimpleMailMessage msg = new SimpleMailMessage();
+            msg.setTo(email);
+            msg.setSubject("Your OTP (valid for 5 minutes)");
+            msg.setText("Your OTP is: " + code + "\nThis OTP expires in 5 minutes.");
 
-        store.put(email, new OtpEntry(code, expiryTime));
+            mailSender.send(msg);  // if this fails → exception
 
-        SimpleMailMessage msg = new SimpleMailMessage();
-        msg.setTo(email);
-        msg.setSubject("Your OTP (valid for 5 minutes)");
-        msg.setText("Your OTP is: " + code + "\nThis OTP expires in 5 minutes.");
+            // only after successful send:
+            store.put(email, new OtpEntry(code, expiryTime));
 
-        mailSender.send(msg);
+            System.out.println("📧 OTP sent to " + email + " → " + code);
 
-        System.out.println("📧 OTP sent to " + email + " → " + code);
+        } catch (Exception ex) {
+            System.out.println(" Failed to send OTP email: " + ex.getMessage());
+            throw new RuntimeException("OTP_SEND_FAILED");
+        }
     }
 
 
     public boolean verifyOtp(String email, String otp) {
-
         OtpEntry entry = store.get(email);
-
         if (entry == null) return false;
-
-
         if (entry.getExpiryTime().isBefore(Instant.now())) {
             store.remove(email);
             return false;
         }
-
-
         boolean match = entry.getOtp().equals(otp);
-
-        if (match) {
-            store.remove(email);
-        }
-
+        if (match) store.remove(email);
         return match;
     }
 

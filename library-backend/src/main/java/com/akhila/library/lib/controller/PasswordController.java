@@ -6,13 +6,15 @@ import com.akhila.library.lib.service.OtpService;
 import com.akhila.library.lib.service.UserService;
 import com.akhila.library.lib.model.ResetPasswordRequest;
 import com.akhila.library.lib.model.OtpEntry;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
+import org.springframework.http.HttpStatus;
 
 import java.time.Instant;
 import java.util.Map;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/password")
@@ -32,76 +34,72 @@ public class PasswordController {
         this.userService = userService;
     }
 
-    // Reusable helper method
-    public User getUserByEmail(String email) {
-        return userRepo.findByEmail(email);
+    // helper
+    private Optional<User> findByEmailOptional(String email) {
+        return userRepo.findFirstByEmail(email);
     }
 
-    // ------------------------ FORGOT PASSWORD ------------------------
     @PostMapping("/forgot")
     public String forgot(@RequestBody Map<String, String> body) {
 
         String email = body.get("email");
 
         if (email == null || email.isBlank()) {
-            return "Email is required";
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Email is required");
         }
 
-        User user = getUserByEmail(email);
-
-        if (user == null) {
-            return "Email not registered";
+        Optional<User> userOpt = userRepo.findFirstByEmail(email);
+        if (userOpt.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Email not registered");
         }
 
-        otpService.sendOtp(email);
-        return "OTP sent to your email.";
+        try {
+            otpService.sendOtp(email);
+            return "OTP_SENT";
+        }
+        catch (RuntimeException ex) {
+            if (ex.getMessage().equals("OTP_SEND_FAILED")) {
+                throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to send OTP");
+            }
+            throw ex;
+        }
     }
+
 
     @PostMapping("/verify")
-    public String verify(@RequestParam String email, @RequestParam String otp) {
-
-        OtpEntry entry = otpService.get(email);
-
-        if (entry == null) {
-            return "No OTP found";
+    public String verify(@RequestBody Map<String, String> body) {
+        String email = body.get("email");
+        String otp = body.get("otp");
+        if (email == null || otp == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Missing email or otp");
         }
-
-        if (entry.getExpiryTime().isBefore(Instant.now())) {
-            otpService.clear(email);
-            return "OTP expired";
-        }
-
-        if (!entry.getOtp().equals(otp)) {
-            return "Invalid OTP";
-        }
-
-        return "valid";
+        boolean ok = otpService.verifyOtp(email, otp);
+        if (!ok) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid or expired OTP");
+        return "OTP verified";
     }
-    // ------------------------ RESET PASSWORD ------------------------
+
     @PostMapping("/reset")
     public String resetPassword(@RequestBody ResetPasswordRequest request) {
 
         OtpEntry entry = otpService.get(request.getEmail());
-
         if (entry == null) {
-            return "No OTP found. Try again.";
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "No OTP found. Try again.");
         }
 
         if (entry.getExpiryTime().isBefore(Instant.now())) {
             otpService.clear(request.getEmail());
-            return "OTP expired. Request a new one.";
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "OTP expired. Request a new one.");
         }
 
         if (!entry.getOtp().equals(request.getOtp())) {
-            return "Invalid OTP.";
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid OTP.");
         }
 
-        User user = userRepo.findByEmail(request.getEmail());
+        User user = userRepo.findFirstByEmail(request.getEmail()).orElse(null);
         if (user == null) {
-            return "User not found";
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "User not found");
         }
 
-        // Update password
         String encoded = passwordEncoder.encode(request.getNewPassword());
         user.setPassword(encoded);
         userRepo.save(user);
