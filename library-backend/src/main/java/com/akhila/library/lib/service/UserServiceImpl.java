@@ -18,12 +18,17 @@ public class UserServiceImpl implements UserService {
     @Override
     public User registerUser(User user) {
 
+        // check duplicate
+        if (userRepo.findByEmail(user.getEmail()) != null) {
+            throw new RuntimeException("Email already exists");
+        }
 
         String hashed = passwordEncoder.encode(user.getPassword());
         user.setPassword(hashed);
 
         return userRepo.save(user);
     }
+
 
     @Override
     public User loginUser(String email, String password) {

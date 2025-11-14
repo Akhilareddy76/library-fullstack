@@ -12,6 +12,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.Instant;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/password")
@@ -31,22 +32,32 @@ public class PasswordController {
         this.userService = userService;
     }
 
+    // Reusable helper method
     public User getUserByEmail(String email) {
         return userRepo.findByEmail(email);
     }
 
+    // ------------------------ FORGOT PASSWORD ------------------------
     @PostMapping("/forgot")
-    public String forgot(@RequestParam String email) {
+    public String forgot(@RequestBody Map<String, String> body) {
+
+        String email = body.get("email");
+
+        if (email == null || email.isBlank()) {
+            return "Email is required";
+        }
+
         User user = getUserByEmail(email);
 
         if (user == null) {
-            return "Email not registere";
+            return "Email not registered";
         }
 
         otpService.sendOtp(email);
-        return "If the email exists, an OTP has been sent.";
+        return "OTP sent to your email.";
     }
 
+    // ------------------------ RESET PASSWORD ------------------------
     @PostMapping("/reset")
     public String resetPassword(@RequestBody ResetPasswordRequest request) {
 
@@ -70,14 +81,12 @@ public class PasswordController {
             return "User not found";
         }
 
+        // Update password
         String encoded = passwordEncoder.encode(request.getNewPassword());
         user.setPassword(encoded);
         userRepo.save(user);
 
-
         otpService.clear(request.getEmail());
-
         return "Password reset successful!";
     }
 }
-
