@@ -13,6 +13,7 @@ export default function Signup() {
   const [strength, setStrength] = useState("");
   const navigate = useNavigate();
 
+  // Strong password rule
   const strongRegex =
     /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
 
@@ -31,20 +32,22 @@ export default function Signup() {
     }
 
     try {
-      await axios.post(
-  `${API_BASE}/signup`,
-  { name, email, password },
-  {
-    withCredentials: true,
-    headers: { "Content-Type": "application/json" }
-  }
+      const res = await axios.post(
+        `${API_BASE}/signup`,
+        { name, email, password },
+        {
+          withCredentials: true,
+          headers: { "Content-Type": "application/json" },
+        }
       );
 
+      // Save user & navigate
       setUser(res.data);
       localStorage.setItem("user", JSON.stringify(res.data));
       navigate("/");
+
     } catch (err) {
-      alert("Email already exists!");
+      alert(err.response?.data?.message || "Email already exists!");
     }
   };
 

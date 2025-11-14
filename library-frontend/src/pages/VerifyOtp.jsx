@@ -1,22 +1,19 @@
 import React, { useState } from "react";
+import axios from "axios";
 import { useLocation, useNavigate } from "react-router-dom";
 
 export default function VerifyOtp() {
   const [otp, setOtp] = useState("");
   const navigate = useNavigate();
-
   const location = useLocation();
+
   const email = location.state?.email;
 
   if (!email) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <p className="text-red-600">Invalid access. Email missing.</p>
-      </div>
-    );
+    return <p className="text-red-600">Invalid access. Email missing.</p>;
   }
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (otp.length !== 6) {
@@ -24,8 +21,25 @@ export default function VerifyOtp() {
       return;
     }
 
+    try {
+      const res = await axios.post(
+        "https://librarybackend-woev.onrender.com/api/password/verify",
+        {},
+        { params: { email, otp } }
+      );
 
-    navigate("/reset-password", { state: { email, otp } });
+      if (res.data !== "valid") {
+        alert(res.data);
+        return;
+      }
+
+      // OTP is valid → go to reset-password
+      navigate("/reset-password", { state: { email, otp } });
+
+    } catch (err) {
+      console.error(err);
+      alert("Something went wrong");
+    }
   };
 
   return (
@@ -44,8 +58,7 @@ export default function VerifyOtp() {
             type="text"
             maxLength="6"
             placeholder="Enter OTP"
-            className="border rounded-md px-4 py-2 text-center tracking-widest text-xl
-            focus:ring-2 focus:ring-blue-500 outline-none"
+            className="border rounded-md px-4 py-2 text-center tracking-widest text-xl focus:ring-2 focus:ring-blue-500 outline-none"
             value={otp}
             onChange={(e) => setOtp(e.target.value)}
           />
@@ -57,13 +70,6 @@ export default function VerifyOtp() {
             Verify OTP
           </button>
         </form>
-
-        <p className="text-center mt-4 text-gray-600">
-          Didn’t get OTP?{" "}
-          <span className="text-blue-600 font-semibold cursor-pointer">
-            Resend
-          </span>
-        </p>
       </div>
     </div>
   );
