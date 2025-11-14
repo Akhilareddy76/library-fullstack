@@ -57,6 +57,26 @@ public class PasswordController {
         return "OTP sent to your email.";
     }
 
+    @PostMapping("/verify")
+    public String verify(@RequestParam String email, @RequestParam String otp) {
+
+        OtpEntry entry = otpService.get(email);
+
+        if (entry == null) {
+            return "No OTP found";
+        }
+
+        if (entry.getExpiryTime().isBefore(Instant.now())) {
+            otpService.clear(email);
+            return "OTP expired";
+        }
+
+        if (!entry.getOtp().equals(otp)) {
+            return "Invalid OTP";
+        }
+
+        return "valid";
+    }
     // ------------------------ RESET PASSWORD ------------------------
     @PostMapping("/reset")
     public String resetPassword(@RequestBody ResetPasswordRequest request) {

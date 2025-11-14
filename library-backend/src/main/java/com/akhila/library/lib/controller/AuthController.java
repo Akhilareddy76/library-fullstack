@@ -4,7 +4,9 @@ import com.akhila.library.lib.model.User;
 import com.akhila.library.lib.service.UserService;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 @RestController
 @RequestMapping("/api")
@@ -15,14 +17,16 @@ public class AuthController {
 
     @PostMapping("/signup")
     public User register(@RequestBody User user, HttpSession session) {
+        try {
+            User savedUser = userService.registerUser(user);
+            session.setAttribute("USER", savedUser.getId());
+            return savedUser;
 
-        User savedUser = userService.registerUser(user);
-
-        session.setAttribute("USER", savedUser.getId());
-        session.setMaxInactiveInterval(30 * 60);
-
-        return savedUser;
+        } catch (Exception ex) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Email already exists");
+        }
     }
+
 
     @PostMapping("/login")
     public User login(@RequestBody User user, HttpSession session) {
@@ -43,7 +47,6 @@ public class AuthController {
         session.invalidate();
         return "Logged out";
     }
-
     @GetMapping("/session-check")
     public User sessionCheck(HttpSession session) {
 
