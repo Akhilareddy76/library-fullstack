@@ -16,10 +16,8 @@ public class CorsConfig {
 
                 registry.addMapping("/**")
                         .allowedOrigins(
-                                "http://localhost:5173",                 // Local React dev
-                                "https://librarybyakhila.netlify.app",  // Netlify default domain
-                                "https://akhila-library.in",            // Custom domain (main)
-                                "https://www.akhila-library.in"         // www version
+                                "http://localhost:5173",
+                                "https://librarybyakhila.netlify.app"
                         )
                         .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
                         .allowedHeaders("*")
