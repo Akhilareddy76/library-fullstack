@@ -11,8 +11,7 @@ import java.util.Map;
 import java.util.Optional;
 
 @RestController
-@RequestMapping("/api/password")
-@CrossOrigin(origins = "*")  // Allow frontend calls
+@RequestMapping("/api/password") // Allow frontend calls
 public class PasswordController {
 
     @Autowired
@@ -24,6 +23,27 @@ public class PasswordController {
     // =============================
     // RESET PASSWORD (NO OTP)
     // =============================
+    @PostMapping("/verify-mail")
+    public ResponseEntity<?> verifyMail(@RequestBody Map<String, String> req) {
+
+        String email = req.get("email");
+
+        if (email == null || email.isEmpty()) {
+            return ResponseEntity.badRequest()
+                    .body(Map.of("message", "Email required"));
+        }
+
+        Optional<User> userOpt = userRepository.findByEmail(email);
+
+        if (userOpt.isEmpty()) {
+            return ResponseEntity.status(404)
+                    .body(Map.of("message", "Email not registered"));
+        }
+
+        return ResponseEntity.ok(Map.of("message", "Email exists"));
+    }
+
+
     @PostMapping("/reset")
     public ResponseEntity<?> resetPassword(@RequestBody Map<String, String> req) {
 
