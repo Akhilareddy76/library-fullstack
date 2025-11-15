@@ -1,6 +1,5 @@
 package com.akhila.library.lib.service;
 
-import com.akhila.library.lib.model.OtpEntry;
 import okhttp3.*;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Value;

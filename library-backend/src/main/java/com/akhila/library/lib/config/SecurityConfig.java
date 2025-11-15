@@ -21,7 +21,6 @@ public class SecurityConfig {
                                 "/api/login",
                                 "/api/signup",
                                 "/api/logout",
-                                "/api/password/**",
                                 "/actuator/**"
                         ).permitAll()
                         .anyRequest().permitAll()
