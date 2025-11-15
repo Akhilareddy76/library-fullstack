@@ -1,94 +1,57 @@
 import React, { useState } from "react";
-import axios from "../api";
+import emailjs from "@emailjs/browser";
 import { useNavigate } from "react-router-dom";
-
-const gmailRegex = /^[a-zA-Z0-9._%+-]+@gmail\.com$/;
 
 export default function ForgotPassword() {
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
+  const generateOtp = () => Math.floor(100000 + Math.random() * 900000).toString();
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+    const trimmed = email.trim();
 
-    if (!gmailRegex.test(email)) {
-      alert("Enter a valid Gmail address!");
-      return;
-    }
+    if (!/^\S+@\S+\.\S+$/.test(trimmed)) return alert("Enter valid email");
+
+    const otp = generateOtp();
+    setLoading(true);
 
     try {
-      setLoading(true);
+      await emailjs.send(
+        import.meta.env.VITE_EMAILJS_SERVICE_ID,
+        import.meta.env.VITE_EMAILJS_TEMPLATE_ID,
+        { user_email: trimmed, otp }
+      );
 
-      const res = await axios.post("/api/password/forgot", { email });
-
-      if (res.data === "OTP_SENT") {
-        alert("OTP sent to your email!");
-        navigate("/verify-otp", { state: { email } });
-      }
-
+      navigate("/verify-otp", { state: { email: trimmed, otp } });
     } catch (err) {
       console.error(err);
-
-      const message = err.response?.data?.message;
-
-      if (message === "Email not registered") {
-        alert("❌ This email is not registered!");
-      } 
-      else if (message === "Failed to send OTP") {
-        alert("⚠️ Failed to send OTP. Try again.");
-      }
-      else {
-        alert("Something went wrong. Try again later.");
-      }
-
-    } finally {
-      setLoading(false);
+      alert("Failed to send OTP");
     }
+
+    setLoading(false);
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100 px-4 mt-20">
-      <div className="bg-white shadow-xl rounded-2xl p-8 w-full max-w-md">
-        
-        <h2 className="text-3xl font-bold text-center text-blue-700 mb-6">
-          Forgot Password
-        </h2>
+    <div className="min-h-screen flex items-center justify-center p-6">
+      <div className="max-w-md w-full bg-white p-6 rounded-lg shadow">
+        <h2 className="text-2xl font-bold mb-4">Forgot Password</h2>
 
-        <p className="text-gray-600 text-center mb-4">
-          Enter your Gmail to receive OTP
-        </p>
-
-        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-
+        <form onSubmit={handleSubmit} className="flex flex-col gap-3">
           <input
             type="email"
+            placeholder="Enter your Gmail"
+            className="border rounded px-3 py-2"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            placeholder="Enter your Gmail"
-            className="border rounded-md px-4 py-2"
           />
 
-          <button
-            type="submit"
-            disabled={loading}
-            className={`${
-              loading ? "bg-blue-400" : "bg-blue-600 hover:bg-blue-700"
-            } text-white py-2 rounded-md font-medium`}
-          >
-            {loading ? "Sending OTP..." : "Send OTP"}
+          <button disabled={loading} className="bg-blue-600 text-white rounded py-2">
+            {loading ? "Sending..." : "Send OTP"}
           </button>
         </form>
-
-        <p className="text-center mt-4 text-gray-600">
-          Remember your password?{" "}
-          <span
-            onClick={() => navigate("/login")}
-            className="text-blue-600 cursor-pointer hover:underline"
-          >
-            Login
-          </span>
-        </p>
       </div>
     </div>
   );
