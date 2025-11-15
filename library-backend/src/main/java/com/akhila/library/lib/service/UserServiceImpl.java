@@ -29,7 +29,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public User loginUser(String email, String password) {
-        Optional<User> optional = userRepo.findFirstByEmail(email);
+        Optional<User> optional = userRepo.findByEmail(email);
         if (optional.isPresent()) {
             User user = optional.get();
             if (passwordEncoder.matches(password, user.getPassword())) {
