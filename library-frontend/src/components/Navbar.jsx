@@ -37,7 +37,7 @@ export default function Navbar() {
   const handleLogout = async () => {
     try {
       await axios.post(
-        "https://library-backend-woev.onrender.com/api/logout",
+        "https://librarybackend-woev.onrender.com/api/logout",
         {},
         { withCredentials: true }
       );
@@ -74,13 +74,12 @@ export default function Navbar() {
   ];
 
   return (
-    <nav className="bg-white shadow-md px-6 py-3 flex justify-between items-center">
+    <nav className="fixed top-0 left-0 w-full bg-white shadow-md px-6 py-5 flex justify-between items-center z-50">
 
       {/* Logo */}
-      <Link to="/" className="text-2xl font-semibold text-blue-700">
-        📚 BookStore
-      </Link>
-
+      <Link to="/" className="text-2xl font-bold font-mono text-blue-700 tracking-tight">
+  📚 <span className="text-red-600">R</span>ead<span className="text-red-600">F</span>low
+     </Link>
       {/* Browse Dropdown */}
       <div className="relative group focus-within:block">
         <button className="px-4 py-2 text-gray-700 hover:text-blue-600 font-medium">

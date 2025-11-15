@@ -1,53 +1,56 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import api from "../api";
+import { useLocation, useNavigate } from "react-router-dom";
+import axios from "../api";
 
 export default function ResetPassword() {
+  const { state } = useLocation();
   const navigate = useNavigate();
-  const otpData = JSON.parse(localStorage.getItem("otpData"));
 
-  const [pass, setPass] = useState("");
-  const [confirm, setConfirm] = useState("");
-
-  if (!otpData?.email)
+  const email = state?.email;
+  if (!email)
     return (
-      <p className="text-center mt-10 text-red-500 text-xl">
+      <p className="min-h-screen flex items-center justify-center text-red-500 text-xl">
         Invalid Access
       </p>
     );
 
-  const strongPass =
+  const [pass, setPass] = useState("");
+  const [confirm, setConfirm] = useState("");
+  const [strength, setStrength] = useState("");
+
+  const strongRegex =
     /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+
+  const handlePassword = (e) => {
+    const value = e.target.value;
+    setPass(value);
+    setStrength(strongRegex.test(value) ? "strong" : "weak");
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!strongPass.test(pass))
-      return alert(
-        "Password must contain 8+ chars, uppercase, lowercase, number & symbol."
-      );
-
+    if (!strongRegex.test(pass)) return alert("Weak password");
     if (pass !== confirm) return alert("Passwords do not match");
 
     try {
-      await api.post("/api/password/reset", {
-        email: otpData.email,
+      await axios.post("/api/password/reset", {
+        email,
         newPassword: pass,
       });
 
-      alert("Password reset successfully!");
-      localStorage.removeItem("otpData");
+      alert("Password reset successful!");
       navigate("/login");
-    } catch {
+    } catch (err) {
       alert("Error resetting password");
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100 px-4">
+    <div className="min-h-[calc(100vh-80px)] flex items-center justify-center bg-gray-100 px-4">
       <div className="bg-white shadow-xl rounded-2xl p-8 max-w-md w-full">
 
-        <h2 className="text-3xl font-bold text-center text-blue-700 mb-4">
+        <h2 className="text-3xl text-center text-blue-700 font-bold mb-6">
           Reset Password
         </h2>
 
@@ -55,18 +58,31 @@ export default function ResetPassword() {
           <input
             type="password"
             placeholder="New Password"
-            className="border rounded-lg px-4 py-3"
-            onChange={(e) => setPass(e.target.value)}
+            className="border px-4 py-3 rounded-lg text-lg"
+            value={pass}
+            onChange={handlePassword}
           />
+
+          {strength === "weak" && (
+            <p className="text-red-500 text-sm -mt-2">
+              Password must contain A-Z, a-z, 0-9 & symbols
+            </p>
+          )}
+          {strength === "strong" && (
+            <p className="text-green-600 text-sm -mt-2">Strong password ✔</p>
+          )}
 
           <input
             type="password"
             placeholder="Confirm Password"
-            className="border rounded-lg px-4 py-3"
+            className="border px-4 py-3 rounded-lg text-lg"
+            value={confirm}
             onChange={(e) => setConfirm(e.target.value)}
           />
 
-          <button className="bg-blue-600 text-white py-3 rounded-lg text-lg">
+          <button
+            className="bg-blue-600 text-white rounded-lg py-3 text-lg font-semibold hover:bg-blue-700"
+          >
             Reset Password
           </button>
         </form>

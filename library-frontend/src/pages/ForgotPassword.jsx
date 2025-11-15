@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import emailjs from "@emailjs/browser";
+import axios from "../api";
 import { useNavigate } from "react-router-dom";
 
 export default function ForgotPassword() {
@@ -13,60 +14,55 @@ export default function ForgotPassword() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const trimmed = email.trim();
-
-    if (!/^\S+@\S+\.\S+$/.test(trimmed)) return alert("Enter a valid email");
-
-    const otp = generateOtp();
-    const expireAt = Date.now() + 15 * 60 * 1000; // 15 mins
-
-    setLoading(true);
 
     try {
+      // backend email verification
+      await axios.post("/api/password/verify-mail", { email });
+
+      const otp = generateOtp();
+      const expireAt = Date.now() + 15 * 60 * 1000;
+
+      setLoading(true);
+
       await emailjs.send(
         import.meta.env.VITE_EMAILJS_SERVICE_ID,
         import.meta.env.VITE_EMAILJS_TEMPLATE_ID,
-        { user_email: trimmed, otp }
+        { user_email: email, otp }
       );
 
-      // Save OTP data in local storage
       localStorage.setItem(
         "otpData",
-        JSON.stringify({ email: trimmed, otp, expireAt })
+        JSON.stringify({ email, otp, expireAt })
       );
 
       setSent(true);
-
       setTimeout(() => navigate("/verify-otp"), 1500);
     } catch (err) {
-      console.error(err);
-      alert("Failed to send OTP");
+      alert("Email not registered");
     }
 
     setLoading(false);
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100 px-4">
+    <div className="min-h-[calc(100vh-80px)] flex items-center justify-center bg-gray-100 px-4">
       <div className="bg-white shadow-xl rounded-2xl p-8 max-w-md w-full text-center">
 
-        <h2 className="text-3xl font-bold text-blue-700 mb-4">
-          Forgot Password
-        </h2>
+        <h2 className="text-3xl font-bold text-blue-700 mb-4">Forgot Password</h2>
 
         {!sent ? (
           <form onSubmit={handleSubmit} className="flex flex-col gap-4">
             <input
               type="email"
-              placeholder="Enter your Gmail"
               className="border rounded-lg px-4 py-3 text-lg"
+              placeholder="Enter your email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
             />
 
             <button
               disabled={loading}
-              className="bg-blue-600 text-white py-3 rounded-lg text-lg"
+              className="bg-blue-600 text-white py-3 rounded-lg text-lg font-semibold hover:bg-blue-700"
             >
               {loading ? "Sending..." : "Send OTP"}
             </button>
@@ -76,6 +72,7 @@ export default function ForgotPassword() {
             OTP sent! Redirecting...
           </p>
         )}
+
       </div>
     </div>
   );

@@ -1,103 +1,120 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import emailjs from "@emailjs/browser";
 import { useNavigate } from "react-router-dom";
 
 export default function VerifyOtp() {
   const navigate = useNavigate();
-  const otpData = JSON.parse(localStorage.getItem("otpData"));
-  const [inputOtp, setInputOtp] = useState("");
+  const [otpInput, setOtpInput] = useState("");
   const [message, setMessage] = useState("");
+  const [timeLeft, setTimeLeft] = useState(0);
 
-  if (!otpData?.email || !otpData?.otp || !otpData?.expireAt)
+  // Get OTP data stored earlier
+  const otpData = JSON.parse(localStorage.getItem("otpData"));
+
+  if (!otpData)
     return (
-      <p className="text-center mt-10 text-red-500 text-xl font-semibold">
+      <p className="min-h-screen flex items-center justify-center text-red-500 text-xl">
         Invalid Access
       </p>
     );
 
-  const isExpired = Date.now() > otpData.expireAt;
+  const { email, otp, expireAt } = otpData;
 
+  // ---------------- TIMER ----------------
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const remaining = Math.max(0, Math.floor((expireAt - Date.now()) / 1000));
+      setTimeLeft(remaining);
+
+      if (remaining === 0) clearInterval(interval);
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  const isExpired = Date.now() > expireAt;
+
+  // ---------------- VERIFY ----------------
   const handleSubmit = (e) => {
     e.preventDefault();
 
-    if (isExpired) return alert("OTP has expired. Please resend.");
+    if (isExpired) return alert("OTP expired. Please resend.");
 
-    if (inputOtp === otpData.otp) {
-      navigate("/reset-password");
+    if (otpInput === otp) {
+      navigate("/reset-password", { state: { email } });
     } else {
-      alert("Invalid OTP. Try again.");
+      alert("Invalid OTP");
     }
   };
 
+  // ---------------- RESEND OTP ----------------
   const resendOtp = async () => {
     const newOtp = Math.floor(100000 + Math.random() * 900000).toString();
-    const newExpireAt = Date.now() + 15 * 60 * 1000;
+    const newExpire = Date.now() + 15 * 60 * 1000;
 
     try {
       await emailjs.send(
         import.meta.env.VITE_EMAILJS_SERVICE_ID,
         import.meta.env.VITE_EMAILJS_TEMPLATE_ID,
-        { user_email: otpData.email, otp: newOtp }
+        { user_email: email, otp: newOtp }
       );
 
-      otpData.otp = newOtp;
-      otpData.expireAt = newExpireAt;
-      localStorage.setItem("otpData", JSON.stringify(otpData));
+      // Update new data
+      localStorage.setItem(
+        "otpData",
+        JSON.stringify({ email, otp: newOtp, expireAt: newExpire })
+      );
 
-      setMessage("New OTP has been sent!");
+      setMessage("New OTP sent!");
       setTimeout(() => setMessage(""), 3000);
     } catch (err) {
       console.error(err);
-      alert("Failed to resend OTP");
+      alert("OTP resend failed");
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100 px-4">
-      <div className="bg-white shadow-xl rounded-2xl p-8 max-w-md w-full">
+    <div className="min-h-[calc(100vh-80px)] flex items-center justify-center bg-gray-100 px-4">
+      <div className="bg-white p-8 rounded-2xl shadow-xl max-w-md w-full text-center">
 
-        <h2 className="text-3xl font-bold text-center text-blue-700 mb-2">
-          Verify OTP
-        </h2>
+        <h1 className="text-3xl font-bold text-blue-700 mb-2">Verify OTP</h1>
 
-        <p className="text-center text-gray-600 mb-4">
-          OTP sent to <span className="font-semibold">{otpData.email}</span>
+        <p className="text-gray-600 mb-4">
+          OTP sent to <span className="font-semibold">{email}</span>
         </p>
-
-        {isExpired && (
-          <p className="text-red-600 text-center mb-3 font-semibold">
-            OTP Expired — Please Resend
-          </p>
-        )}
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <input
-            type="text"
-            maxLength="6"
+            maxLength={6}
             placeholder="Enter 6-digit OTP"
             className="border rounded-lg px-4 py-3 text-center text-xl tracking-widest"
-            onChange={(e) => setInputOtp(e.target.value)}
+            onChange={(e) => setOtpInput(e.target.value)}
           />
 
-          <button className="bg-blue-600 text-white py-3 rounded-lg text-lg">
-            Verify
+          <button className="bg-blue-600 text-white rounded-lg py-3 text-lg font-semibold hover:bg-blue-700">
+            Verify OTP
           </button>
         </form>
 
-        <p className="text-center mt-4 text-sm">
-          Didn’t get the OTP?{" "}
-          <button
-            onClick={resendOtp}
-            className="text-blue-600 font-semibold"
-          >
-            Resend OTP
-          </button>
-        </p>
+        {/* TIMER */}
+        {!isExpired ? (
+          <p className="text-gray-600 mt-3 text-sm">
+            OTP expires in: <span className="font-semibold">{timeLeft}s</span>
+          </p>
+        ) : (
+          <p className="text-red-600 font-semibold mt-3">OTP expired</p>
+        )}
+
+        {/* RESEND */}
+        <button
+          onClick={resendOtp}
+          className="mt-4 text-blue-600 font-semibold hover:underline"
+        >
+          Resend OTP
+        </button>
 
         {message && (
-          <p className="text-green-600 text-center mt-3 animate-pulse">
-            {message}
-          </p>
+          <p className="text-green-600 mt-3 animate-pulse">{message}</p>
         )}
       </div>
     </div>

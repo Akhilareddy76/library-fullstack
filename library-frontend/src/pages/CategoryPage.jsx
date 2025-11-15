@@ -15,7 +15,7 @@ export default function CategoryPage() {
   return (
     <div className="p-6">
       <h1 className="text-2xl font-semibold text-blue-700 mb-4">
-        {categoryName} Books
+        {categoryName.charAt(0).toUpperCase() + categoryName.slice(1)} Books
       </h1>
 
       {books.length === 0 ? (

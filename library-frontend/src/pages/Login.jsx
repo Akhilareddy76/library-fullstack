@@ -1,9 +1,7 @@
-import React, { useState, useContext } from "react";
-import axios from "../api";
+import React, { useContext, useState } from "react";
 import { BookContext } from "../contexts/BookContext";
 import { useNavigate } from "react-router-dom";
-
-const gmailRegex = /^[a-zA-Z0-9._%+-]+@gmail\.com$/;
+import axios from "../api";
 
 export default function Login() {
   const { setUser } = useContext(BookContext);
@@ -13,39 +11,71 @@ export default function Login() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!gmailRegex.test(email)) {
-      alert("Please enter a valid Gmail address (example@gmail.com)");
-      return;
-    }
+
     try {
-      const res = await axios.post("/api/login", { email, password });
-      if (!res.data) {
-        alert("Invalid email or password!");
-        return;
-      }
+      const res = await axios.post(
+        "/api/login",
+        { email, password },
+        { withCredentials: true }
+      );
+
       setUser(res.data);
       localStorage.setItem("user", JSON.stringify(res.data));
       navigate("/");
     } catch (err) {
-      if (err.response?.status === 401) {
-        alert("Invalid email or password!");
-      } else {
-        alert("Something went wrong. Try again.");
-      }
+      alert(err.response?.data?.message || "Login failed.");
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100 px-4">
-      <div className="bg-white shadow-lg rounded-xl p-8 w-full max-w-md">
-        <h2 className="text-3xl font-bold text-center text-blue-700 mb-6">Login</h2>
+    <div className="min-h-[calc(100vh-80px)] flex items-center justify-center bg-gray-100 px-4">
+      <div className="bg-white shadow-xl rounded-2xl p-8 w-full max-w-md animate-fadeIn">
+
+        <h2 className="text-3xl font-bold text-center text-blue-700 mb-6">
+          Login
+        </h2>
+
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-          <input type="email" value={email} onChange={(e)=>setEmail(e.target.value)} placeholder="Enter Email" className="border rounded-md px-4 py-2"/>
-          <input type="password" value={password} onChange={(e)=>setPassword(e.target.value)} placeholder="Enter Password" className="border rounded-md px-4 py-2"/>
-          <p className="text-right text-blue-600 cursor-pointer text-sm" onClick={()=>navigate("/forgot-password")}>Forgot Password?</p>
-          <button type="submit" className="bg-blue-600 text-white py-2 rounded-md">Login</button>
+          <input
+            type="email"
+            placeholder="Enter Email"
+            className="border rounded-lg px-4 py-3 text-lg"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+          />
+
+          <input
+            type="password"
+            placeholder="Enter Password"
+            className="border rounded-lg px-4 py-3 text-lg"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+          />
+
+          <p
+            onClick={() => navigate("/forgot-password")}
+            className="text-right text-blue-600 cursor-pointer text-sm hover:underline"
+          >
+            Forgot Password?
+          </p>
+
+          <button
+            className="bg-blue-600 text-white py-3 rounded-lg text-lg font-semibold hover:bg-blue-700 transition"
+          >
+            Login
+          </button>
         </form>
-        <p className="text-center mt-4 text-gray-600">Don't have an account? <span onClick={()=>navigate("/signup")} className="text-blue-600 cursor-pointer">Signup</span></p>
+
+        <p className="text-center mt-4 text-gray-600">
+          Don't have an account?
+          <span
+            className="text-blue-600 cursor-pointer ml-1 font-semibold hover:underline"
+            onClick={() => navigate("/signup")}
+          >
+            Signup
+          </span>
+        </p>
+
       </div>
     </div>
   );

@@ -1,19 +1,17 @@
 import React, { useState, useContext } from "react";
-import axios from "axios";
-import { useNavigate } from "react-router-dom";
+import axios from "../api";
 import { BookContext } from "../contexts/BookContext";
-
-const API_BASE = "https://librarybackend-woev.onrender.com/api";
+import { useNavigate } from "react-router-dom";
 
 export default function Signup() {
   const { setUser } = useContext(BookContext);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirm, setConfirm] = useState("");
   const [strength, setStrength] = useState("");
   const navigate = useNavigate();
 
-  // Strong password rule
   const strongRegex =
     /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
 
@@ -26,96 +24,87 @@ export default function Signup() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (strength !== "strong") {
-      alert("Please enter a strong password.");
-      return;
-    }
+    if (!strongRegex.test(password)) return alert("Weak password");
+    if (password !== confirm) return alert("Passwords do not match");
 
     try {
       const res = await axios.post(
-        `${API_BASE}/signup`,
-        { name, email, password },
-        {
-          withCredentials: true,
-          headers: { "Content-Type": "application/json" },
-        }
+        "/api/signup",
+        { username: name, email, password },
+        { withCredentials: true }
       );
 
-      // Save user & navigate
       setUser(res.data);
-      localStorage.setItem("user", JSON.stringify(res.data));
       navigate("/");
-
     } catch (err) {
-      alert(err.response?.data?.message || "Email already exists!");
+      alert("Signup failed.");
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100 px-4">
-      <div className="bg-white shadow-lg rounded-xl p-8 w-full max-w-md">
+    <div className="min-h-[calc(100vh-80px)] flex items-center justify-center bg-gray-100 px-4">
+      <div className="bg-white shadow-xl rounded-2xl p-8 w-full max-w-md">
 
-        <h2 className="text-3xl font-bold text-center text-blue-700 mb-6">
-          Signup
-        </h2>
+        <h2 className="text-3xl font-bold text-center text-blue-700 mb-6">Signup</h2>
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <input
             type="text"
+            className="border rounded-lg px-4 py-3 text-lg"
             placeholder="Full Name"
-            className="border rounded-md px-4 py-2 focus:ring-2 focus:ring-blue-500 outline-none"
             value={name}
             onChange={(e) => setName(e.target.value)}
           />
 
           <input
             type="email"
+            className="border rounded-lg px-4 py-3 text-lg"
             placeholder="Email Address"
-            className="border rounded-md px-4 py-2 focus:ring-2 focus:ring-blue-500 outline-none"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
           />
 
           <input
             type="password"
+            className="border rounded-lg px-4 py-3 text-lg"
             placeholder="Password (Strong)"
-            className="border rounded-md px-4 py-2 focus:ring-2 focus:ring-blue-500 outline-none"
             value={password}
             onChange={handlePassword}
           />
 
           {strength === "weak" && (
-            <p className="text-red-600 text-sm">
-              ❌ Weak password — Use A-Z, a-z, 0-9 & symbols
-            </p>
+            <p className="text-red-500 text-sm -mt-2">Password is too weak</p>
+          )}
+          {strength === "strong" && (
+            <p className="text-green-600 text-sm -mt-2">Strong password ✔</p>
           )}
 
-          {strength === "strong" && (
-            <p className="text-green-600 text-sm">✔ Strong password</p>
-          )}
+          <input
+            type="password"
+            className="border rounded-lg px-4 py-3 text-lg"
+            placeholder="Confirm Password"
+            value={confirm}
+            onChange={(e) => setConfirm(e.target.value)}
+          />
 
           <button
-            type="submit"
+            className="bg-blue-600 text-white py-3 rounded-lg text-lg font-semibold hover:bg-blue-700"
             disabled={strength !== "strong"}
-            className={`py-2 rounded-md text-white font-semibold transition ${
-              strength === "strong"
-                ? "bg-blue-600 hover:bg-blue-700"
-                : "bg-gray-400 cursor-not-allowed"
-            }`}
           >
             Signup
           </button>
         </form>
 
         <p className="text-center mt-4 text-gray-600">
-          Already have an account?{" "}
+          Already have an account?
           <span
-            className="text-blue-600 font-semibold cursor-pointer"
+            className="text-blue-600 cursor-pointer ml-1 font-semibold hover:underline"
             onClick={() => navigate("/login")}
           >
             Login
           </span>
         </p>
+
       </div>
     </div>
   );
