@@ -3,7 +3,6 @@ package com.akhila.library.lib.controller;
 import com.akhila.library.lib.model.User;
 import com.akhila.library.lib.repository.UserRepository;
 import com.akhila.library.lib.service.OtpService;
-import com.akhila.library.lib.service.UserService;
 import com.akhila.library.lib.model.ResetPasswordRequest;
 import com.akhila.library.lib.model.OtpEntry;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,18 +26,14 @@ public class PasswordController {
     private BCryptPasswordEncoder passwordEncoder;
 
     private final OtpService otpService;
-    private final UserService userService;
 
-    public PasswordController(OtpService otpService, UserService userService) {
+    public PasswordController(OtpService otpService) {
         this.otpService = otpService;
-        this.userService = userService;
     }
 
-    // helper
-    private Optional<User> findByEmailOptional(String email) {
-        return userRepo.findFirstByEmail(email);
-    }
-
+    // ==============================
+    // SEND OTP FOR FORGOT PASSWORD
+    // ==============================
     @PostMapping("/forgot")
     public String forgot(@RequestBody Map<String, String> body) {
 
@@ -53,35 +48,38 @@ public class PasswordController {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Email not registered");
         }
 
-        try {
-            otpService.sendOtp(email);
-            return "OTP_SENT";
-        }
-        catch (RuntimeException ex) {
-            if (ex.getMessage().equals("OTP_SEND_FAILED")) {
-                throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to send OTP");
-            }
-            throw ex;
-        }
+        otpService.sendOtp(email);
+        return "OTP_SENT";
     }
 
-
+    // ==============================
+    // VERIFY OTP
+    // ==============================
     @PostMapping("/verify")
     public String verify(@RequestBody Map<String, String> body) {
         String email = body.get("email");
         String otp = body.get("otp");
+
         if (email == null || otp == null) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Missing email or otp");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Missing email or OTP");
         }
-        boolean ok = otpService.verifyOtp(email, otp);
-        if (!ok) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid or expired OTP");
-        return "OTP verified";
+
+        boolean valid = otpService.verifyOtp(email, otp);
+
+        if (!valid)
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid or expired OTP");
+
+        return "OTP_VERIFIED";
     }
 
+    // ==============================
+    // RESET PASSWORD
+    // ==============================
     @PostMapping("/reset")
     public String resetPassword(@RequestBody ResetPasswordRequest request) {
 
         OtpEntry entry = otpService.get(request.getEmail());
+
         if (entry == null) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "No OTP found. Try again.");
         }
@@ -95,16 +93,13 @@ public class PasswordController {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid OTP.");
         }
 
-        User user = userRepo.findFirstByEmail(request.getEmail()).orElse(null);
-        if (user == null) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "User not found");
-        }
+        User user = userRepo.findFirstByEmail(request.getEmail())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "User not found"));
 
-        String encoded = passwordEncoder.encode(request.getNewPassword());
-        user.setPassword(encoded);
+        user.setPassword(passwordEncoder.encode(request.getNewPassword()));
         userRepo.save(user);
 
         otpService.clear(request.getEmail());
-        return "Password reset successful!";
+        return "PASSWORD_RESET_SUCCESS";
     }
 }
