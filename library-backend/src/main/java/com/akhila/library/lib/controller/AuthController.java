@@ -41,6 +41,7 @@ public class AuthController {
         throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid credentials");
     }
 
+
     @PostMapping("/logout")
     public String logout(HttpSession session) {
         session.invalidate();

@@ -19,6 +19,7 @@ public class CorsConfig {
                                 "https://your-frontend-domain.netlify.app"
                         )
                         .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
+                        .allowedHeaders("*")
                         .allowCredentials(true);
             }
         };
