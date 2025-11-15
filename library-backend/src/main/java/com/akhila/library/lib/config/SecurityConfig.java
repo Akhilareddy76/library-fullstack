@@ -20,6 +20,7 @@ public class SecurityConfig {
                         .requestMatchers(
                                 "/api/login",
                                 "/api/signup",
+                                "/api/logout",
                                 "/api/password/**",
                                 "/actuator/**"
                         ).permitAll()
