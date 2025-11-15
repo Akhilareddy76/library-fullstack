@@ -19,7 +19,7 @@ export default function VerifyOtp() {
       return;
     }
     try {
-      await axios.post("/password/verify", { email, otp });
+      await axios.post("/api/password/verify", { email, otp });
       // verified -> go to reset
       navigate("/reset-password", { state: { email, otp } });
     } catch (err) {

@@ -20,7 +20,7 @@ export default function ForgotPassword() {
   setLoading(true);
 
   try {
-    const res = await axios.post("/password/forgot", { email });
+    const res = await axios.post("/api/password/forgot", { email });
 
     if (res.data === "OTP_SENT") {
       alert("OTP sent to your email!");
