@@ -16,50 +16,75 @@ public class OtpService {
     private final JavaMailSender mailSender;
     private final SecureRandom random = new SecureRandom();
 
-    // In-memory store (stateless deployments will lose this; for production use DB/Redis)
+    // In-memory OTP store
     private final Map<String, OtpEntry> store = new ConcurrentHashMap<>();
 
     public OtpService(JavaMailSender mailSender) {
         this.mailSender = mailSender;
     }
 
+    // -----------------------------------------------------------------------------------
+    // SEND OTP
+    // -----------------------------------------------------------------------------------
     public void sendOtp(String email) {
 
         String code = String.format("%06d", random.nextInt(1_000_000));
         Instant expiryTime = Instant.now().plusSeconds(5 * 60);
 
+        SimpleMailMessage msg = new SimpleMailMessage();
+        msg.setTo(email);
+        msg.setSubject("Your One-Time Password (Valid for 5 Minutes)");
+        msg.setText(
+                "Hello,\n\n" +
+                        "Your OTP is: " + code + "\n" +
+                        "This OTP is valid for 5 minutes.\n\n" +
+                        "If you did not request this code, please ignore this email.\n\n" +
+                        "Regards,\nAkhila Library System"
+        );
+
         try {
-            SimpleMailMessage msg = new SimpleMailMessage();
-            msg.setTo(email);
-            msg.setSubject("Your OTP (valid for 5 minutes)");
-            msg.setText("Your OTP is: " + code + "\nThis OTP expires in 5 minutes.");
-
-            mailSender.send(msg);  // if this fails → exception
-
-            // only after successful send:
+            mailSender.send(msg);
             store.put(email, new OtpEntry(code, expiryTime));
-
-            System.out.println("📧 OTP sent to " + email + " → " + code);
+            System.out.println("📧 OTP Sent Successfully → " + email + " | OTP: " + code);
 
         } catch (Exception ex) {
-            System.out.println(" Failed to send OTP email: " + ex.getMessage());
-            throw new RuntimeException("OTP_SEND_FAILED");
+            System.err.println("❌ Failed to send OTP to " + email + ": " + ex.getMessage());
+            throw new RuntimeException("OTP_EMAIL_SEND_FAILED");
         }
     }
 
-
+    // -----------------------------------------------------------------------------------
+    // VERIFY OTP
+    // -----------------------------------------------------------------------------------
     public boolean verifyOtp(String email, String otp) {
         OtpEntry entry = store.get(email);
-        if (entry == null) return false;
+
+        if (entry == null) {
+            System.out.println("❌ No OTP stored for " + email);
+            return false;
+        }
+
         if (entry.getExpiryTime().isBefore(Instant.now())) {
+            System.out.println("⌛ OTP expired for " + email);
             store.remove(email);
             return false;
         }
+
         boolean match = entry.getOtp().equals(otp);
-        if (match) store.remove(email);
+
+        if (match) {
+            System.out.println("✅ OTP verified for: " + email);
+            store.remove(email);
+        } else {
+            System.out.println("❌ OTP mismatch for: " + email);
+        }
+
         return match;
     }
 
+    // -----------------------------------------------------------------------------------
+    // HELPERS
+    // -----------------------------------------------------------------------------------
     public void clear(String email) {
         store.remove(email);
     }
