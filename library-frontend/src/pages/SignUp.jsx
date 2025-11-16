@@ -23,7 +23,9 @@ export default function Signup() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
+     if (!/^[a-zA-Z0-9._%+-]+@gmail\.com$/.test(trimmed)) {
+      return alert("Enter a valid Gmail address");
+    }
     if (!strongRegex.test(password)) return alert("Weak password");
     if (password !== confirm) return alert("Passwords do not match");
 

@@ -12,6 +12,10 @@ export default function Login() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+     if (!/^[a-zA-Z0-9._%+-]+@gmail\.com$/.test(trimmed)) {
+      return alert("Enter a valid Gmail address");
+    }
+
     try {
       const res = await axios.post(
         "/api/login",
@@ -59,14 +63,14 @@ export default function Login() {
            if (!email.trim()) {
            return alert("Please enter your email first.");
           }
-         if (!gmailRegex.test(email)) {
-          return alert("Enter a valid Gmail address.");
-          }
-
+          const gmailRegex = /^[a-zA-Z0-9._%+-]+@gmail\.com$/;
+    
+          if (!gmailRegex.test(trimmed)) {
+          return alert("Please enter a valid Gmail address (example@gmail.com).");
+           }
           navigate("/forgot-password", { state: { email } });
   }}
->
-  Forgot Password?
+> Forgot Password?
 </p>
 
 
