@@ -12,7 +12,7 @@ export default function Login() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-     if (!/^[a-zA-Z0-9._%+-]+@gmail\.com$/.test(trimmed)) {
+     if (!/^[a-zA-Z0-9._%+-]+@gmail\.com$/.test(email)) {
       return alert("Enter a valid Gmail address");
     }
 
