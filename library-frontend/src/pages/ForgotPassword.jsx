@@ -18,14 +18,14 @@ export default function ForgotPassword() {
     Math.floor(100000 + Math.random() * 900000).toString();
 
   const handleSubmit = async (e) => {
+
     e.preventDefault();
+
     const trimmed = email.trim();
 
     if (!/^[a-zA-Z0-9._%+-]+@gmail\.com$/.test(trimmed)) {
       return alert("Enter a valid Gmail address");
     }
-
-    // Backend check - is email registered?
     try {
       const res = await axios.post(
         "/api/password/verify-mail",
@@ -40,7 +40,7 @@ export default function ForgotPassword() {
     }
 
     const otp = generateOtp();
-    const expireAt = Date.now() + 15 * 60 * 1000; // 15 minutes
+    const expireAt = Date.now() + 15 * 60 * 1000; 
 
     setLoading(true);
 
@@ -87,11 +87,12 @@ export default function ForgotPassword() {
             />
 
             <button
-              disabled={loading}
-              className="bg-blue-600 text-white py-3 rounded-lg text-lg"
-            >
-              {loading ? "Sending..." : "Send OTP"}
-            </button>
+            type="submit"
+           disabled={loading}
+          className="bg-blue-600 text-white py-3 rounded-lg text-lg"
+>
+         {loading ? "Sending..." : "Send OTP"}
+         </button>
           </form>
         ) : (
           <p className="text-green-600 font-semibold animate-pulse">
