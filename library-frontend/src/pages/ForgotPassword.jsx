@@ -17,8 +17,10 @@ export default function ForgotPassword() {
 
     try {
       // backend email verification
-      await axios.post("/api/password/verify-mail", { email });
-
+       const res = await axios.post("/api/password/verify-mail",
+       { email },  // JSON body
+       { withCredentials: true }
+       )
       const otp = generateOtp();
       const expireAt = Date.now() + 15 * 60 * 1000;
 
