@@ -15,6 +15,8 @@ export default function Signup() {
   const strongRegex =
     /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
 
+    const trimmed = email.trim();
+
   const handlePassword = (e) => {
     const value = e.target.value;
     setPassword(value);
