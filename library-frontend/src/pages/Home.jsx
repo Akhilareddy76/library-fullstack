@@ -44,43 +44,46 @@ export default function Home() {
   const categories = Object.keys(booksByCategory);
 
   return (
-    <div className="px-6 py-4 w-full bg-gray-50 min-h-screen">
+  <div className="px-4 py-4 w-full bg-gray-50 min-h-screen pt-24">
 
-      {categories.map((category, idx) => {
-        const books = booksByCategory[category] || [];
+    {categories.map((category, idx) => {
+      const books = booksByCategory[category] || [];
 
-        return (
-          <div
-            key={category}
-            className="mb-16 animate-fadeIn"
-            style={{ animationDelay: `${idx * 0.1}s` }}
-          >
-            {/* CATEGORY HEADER */}
-            <div className="flex items-center justify-between mb-4">
-             <h2 className="text-2xl font-semibold text-blue-700 mb-6">
-  {            category.charAt(0).toUpperCase() + category.slice(1)} Books
-             </h2>     
-            </div>
+      return (
+        <div
+          key={category}
+          className="mb-16"
+        >
+          {/* CATEGORY HEADER */}
+          <div className="flex items-center justify-between mb-2">
+            <h2 className="text-xl md:text-2xl font-semibold text-blue-700 tracking-wide">
+              {category.charAt(0).toUpperCase() + category.slice(1)} Books
+            </h2>
+          </div>
 
-            {/* CAROUSEL */}
-            <div className="w-full relative">
-              {books.length > 0 ? (
-                <Slider {...settings}>
-                  {books.map((book) => (
-                    <div key={book.id} className="px-3">
+          {/* SLIDER */}
+          <div className="w-full relative">
+            {books.length > 0 ? (
+              <Slider {...settings}>
+                {books.map((book) => (
+                  <div key={book.id} className="!flex justify-center px-2">
+                    <div className="w-[140px] sm:w-[160px] md:w-[180px]">
                       <BookCard book={book} showReadButton={true} />
                     </div>
-                  ))}
-                </Slider>
-              ) : (
-                <p className="text-gray-500 text-center">
-                  No books available in this category.
-                </p>
-              )}
-            </div>
+                  </div>
+                ))}
+              </Slider>
+            ) : (
+              <p className="text-gray-500 text-center">
+                No books available in this category.
+              </p>
+            )}
           </div>
-        );
-      })}
-    </div>
-  );
+        </div>
+      );
+    })}
+  </div>
+);
+
+
 }
