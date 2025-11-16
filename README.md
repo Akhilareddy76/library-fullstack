@@ -239,6 +239,13 @@ Deploying Frontend (Netlify) + Backend (Render)
 
 Handling CORS & cookies in production
 
+## 🌐 Live Demo
+
+### Frontend (Netlify)
+https://librarybyakhila.netlify.app/
+
+### Backend (Render)
+https://librarybackend-woev.onrender.com
 
 
 👩‍💻 Author
