@@ -65,7 +65,7 @@ export default function Login() {
           }
           const gmailRegex = /^[a-zA-Z0-9._%+-]+@gmail\.com$/;
     
-          if (!gmailRegex.test(trimmed)) {
+          if (!gmailRegex.test(email)) {
           return alert("Please enter a valid Gmail address (example@gmail.com).");
            }
           navigate("/forgot-password", { state: { email } });
