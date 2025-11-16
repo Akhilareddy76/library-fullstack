@@ -42,6 +42,7 @@ export default function Login() {
             className="border rounded-lg px-4 py-3 text-lg"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
+            required
           />
 
           <input
@@ -53,11 +54,21 @@ export default function Login() {
           />
 
           <p
-            onClick={() => navigate("/forgot-password")}
-            className="text-right text-blue-600 cursor-pointer text-sm hover:underline"
-          >
-            Forgot Password?
-          </p>
+           className="text-right text-blue-600 cursor-pointer text-sm"
+           onClick={() => {
+           if (!email.trim()) {
+           return alert("Please enter your email first.");
+          }
+         if (!gmailRegex.test(email)) {
+          return alert("Enter a valid Gmail address.");
+          }
+
+          navigate("/forgot-password", { state: { email } });
+  }}
+>
+  Forgot Password?
+</p>
+
 
           <button
             className="bg-blue-600 text-white py-3 rounded-lg text-lg font-semibold hover:bg-blue-700 transition"
